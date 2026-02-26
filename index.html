@@ -65,9 +65,27 @@
             text-align: center;
             padding: 20px;
         }
+        .retry-button {
+            margin-top: 16px;
+            background: var(--tg-theme-button-color, #40a7e3);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            width: auto;
+            display: inline-block;
+        }
         .loading {
             text-align: center;
             padding: 40px;
+        }
+        #error {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
     </style>
 </head>
@@ -95,6 +113,12 @@
         }
 
         async function fetchAd(user) {
+            // Show loading, hide error and container
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('adContainer').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('error').innerHTML = ''; // Clear previous error content
+
             const widgetId = '0ed75f78-65f6-41b1-b8f1-fa97c25f048d'; // Your widget ID
             const url = 'https://bid.tgads.live/bot-request';
 
@@ -120,7 +144,7 @@
                 const adData = await response.json();
                 renderAd(adData);
             } catch (err) {
-                showError('Failed to load ad: ' + err.message);
+                showError('Failed to load ad: ' + err.message, true);
             }
         }
 
@@ -140,12 +164,24 @@
             });
         }
 
-        function showError(message) {
+        function showError(message, showRetry = false) {
             document.getElementById('loading').style.display = 'none';
+            document.getElementById('adContainer').style.display = 'none';
             const errorDiv = document.getElementById('error');
             errorDiv.style.display = 'block';
-            errorDiv.innerText = message;
+            errorDiv.innerHTML = message; // Set the error text
+
+            if (showRetry) {
+                // Create and append retry button
+                const retryBtn = document.createElement('button');
+                retryBtn.className = 'retry-button';
+                retryBtn.innerText = 'Retry';
+                retryBtn.onclick = () => fetchAd(user);
+                errorDiv.appendChild(retryBtn);
+            }
         }
     </script>
 </body>
 </html>
+
+    
