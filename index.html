@@ -1,10 +1,13 @@
- <!DOCTYPE html>
+ 
+        <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Generator + Rewarded Ad</title>
+    <title>Booster Box – Rewarded Ads</title>
+    <!-- Telegram WebApp script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Adsgram script (provided) -->
     <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
     <style>
         body {
@@ -22,148 +25,217 @@
             max-width: 400px;
             width: 100%;
         }
-        h1 { font-size: 24px; margin-bottom: 8px; }
-        .info { color: var(--tg-theme-hint-color, #666); font-size: 14px; }
-        .balance {
+        h1 {
+            font-size: 28px;
+            margin-bottom: 4px;
+            text-align: center;
+        }
+        .subtitle {
+            color: var(--tg-theme-hint-color, #666);
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .booster-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .booster-card {
             background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-            padding: 12px;
-            border-radius: 8px;
-            margin: 16px 0;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid var(--tg-theme-hint-color, #ccc);
+        }
+        .booster-emoji {
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+        .booster-name {
             font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .booster-count {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--tg-theme-button-color, #2481cc);
         }
         .ad-button {
             background: var(--tg-theme-button-color, #2481cc);
             color: var(--tg-theme-button-text-color, #ffffff);
             border: none;
-            border-radius: 8px;
-            padding: 12px 24px;
+            border-radius: 12px;
+            padding: 16px;
             font-size: 18px;
+            font-weight: 600;
             width: 100%;
-            margin: 10px 0;
             cursor: pointer;
+            margin: 16px 0;
+            transition: opacity 0.2s;
         }
         .ad-button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
-        .result-box {
+        .log-box {
             background: var(--tg-theme-secondary-bg-color, #f0f0f0);
             border-radius: 8px;
-            padding: 16px;
-            margin-top: 20px;
+            padding: 12px;
             font-family: monospace;
+            font-size: 12px;
             border: 1px solid var(--tg-theme-hint-color, #ccc);
-        }
-        .reward-message {
-            color: #4caf50;
-            font-weight: bold;
-            margin-top: 10px;
+            margin-top: 16px;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>QR Code Generator</h1>
-        <p class="info">Earn coins by watching ads</p>
+        <h1>🎁 Booster Box</h1>
+        <div class="subtitle">Watch ads to get random boosters</div>
 
-        <div class="balance" id="balanceDisplay">Coins: 0</div>
-
-        <button class="ad-button" id="watchAdBtn">🎥 Watch Ad to earn 10 coins</button>
-
-        <!-- Your QR code generation UI can go here -->
-        <input type="text" id="qrInput" placeholder="Enter text for QR code" style="width:100%; padding:8px; margin:10px 0;">
-        <button id="generateBtn" style="width:100%; padding:8px;">Generate QR</button>
-        <div id="qrResult"></div>
-
-        <div class="result-box" id="logBox">
-            <strong>Ad Log:</strong>
-            <pre id="logPre">Ready</pre>
+        <!-- Boosters inventory -->
+        <div class="booster-grid">
+            <div class="booster-card">
+                <div class="booster-emoji">⬅️</div>
+                <div class="booster-name">Move Back</div>
+                <div class="booster-count" id="booster1">0</div>
+            </div>
+            <div class="booster-card">
+                <div class="booster-emoji">❌</div>
+                <div class="booster-name">Delete Tile</div>
+                <div class="booster-count" id="booster2">0</div>
+            </div>
+            <div class="booster-card">
+                <div class="booster-emoji">➡️</div>
+                <div class="booster-name">Move Without Tile</div>
+                <div class="booster-count" id="booster3">0</div>
+            </div>
+            <div class="booster-card">
+                <div class="booster-emoji">🔄</div>
+                <div class="booster-name">Shuffle</div>
+                <div class="booster-count" id="booster4">0</div>
+            </div>
         </div>
+
+        <!-- Ad button -->
+        <button class="ad-button" id="watchAdBtn">🎬 Watch Ad to get 1 random booster</button>
+
+        <!-- Log area (optional, shows ad events) -->
+        <div class="log-box" id="log">Ready. Click the button to watch an ad.</div>
     </div>
 
     <script>
-        const tg = window.Telegram?.WebApp;
-        if (tg) {
-            tg.ready();
-            tg.expand();
-        }
-
-        // User balance (simple in-memory, could use tg.CloudStorage or backend)
-        let coins = 0;
-        const balanceDisplay = document.getElementById('balanceDisplay');
-        const watchAdBtn = document.getElementById('watchAdBtn');
-        const logPre = document.getElementById('logPre');
-
-        // Initialize Adsgram with YOUR block ID (after approval)
-        const blockId = '22744'; // Use the correct approved block ID
-        let adController = null;
-
-        function initAdsgram() {
-            if (window.Adsgram) {
-                try {
-                    adController = window.Adsgram.init({ blockId: blockId });
-                    log('Adsgram initialized');
-                } catch (e) {
-                    log('Init error: ' + e.message);
-                    watchAdBtn.disabled = true;
-                }
-            } else {
-                setTimeout(initAdsgram, 100);
-            }
-        }
-
-        function log(msg) {
-            logPre.textContent = msg;
-        }
-
-        function updateBalance() {
-            balanceDisplay.textContent = `Coins: ${coins}`;
-        }
-
-        // Reward function – called when ad is successfully completed
-        function giveReward() {
-            coins += 10;
-            updateBalance();
-            log('✅ Reward given: +10 coins');
-        }
-
-        watchAdBtn.addEventListener('click', async () => {
-            if (!adController) {
-                log('Ad controller not ready');
-                return;
+        (function() {
+            // Telegram WebApp initialization
+            const tg = window.Telegram?.WebApp;
+            if (tg) {
+                tg.ready();
+                tg.expand();
             }
 
-            // Disable button during ad to prevent double-click
-            watchAdBtn.disabled = true;
-            log('Loading ad...');
+            // Block ID provided: 23741
+            const BLOCK_ID = '23741';
+            let AdController = null;
 
-            try {
-                const result = await adController.show();
-                // For rewarded ads, we need to check if the user watched till the end
-                // 'done' is true if user watched fully (or closed interstitial)
-                if (result.done && !result.error) {
-                    giveReward();
+            // Booster counts: [moveBack, deleteTile, moveWithoutTile, shuffle]
+            let boosters = [0, 0, 0, 0];
+
+            // DOM elements
+            const logEl = document.getElementById('log');
+            const watchBtn = document.getElementById('watchAdBtn');
+            const boosterEls = [
+                document.getElementById('booster1'),
+                document.getElementById('booster2'),
+                document.getElementById('booster3'),
+                document.getElementById('booster4')
+            ];
+
+            // Update booster counts in UI
+            function updateBoosters() {
+                boosterEls.forEach((el, i) => {
+                    el.textContent = boosters[i];
+                });
+            }
+
+            // Log helper
+            function log(message) {
+                logEl.textContent = message;
+                console.log(message);
+            }
+
+            // Give a random booster
+            function giveRandomBooster() {
+                const randomIndex = Math.floor(Math.random() * boosters.length);
+                boosters[randomIndex]++;
+                updateBoosters();
+                const names = ['Move Back', 'Delete Tile', 'Move Without Tile', 'Shuffle'];
+                log(`🎉 You got: ${names[randomIndex]}!`);
+            }
+
+            // Initialize Adsgram (script is already loaded)
+            function initAdsgram() {
+                if (window.Adsgram) {
+                    try {
+                        AdController = window.Adsgram.init({ blockId: BLOCK_ID });
+                        log('✅ Adsgram initialized with block ID: ' + BLOCK_ID);
+                    } catch (e) {
+                        log('❌ Init error: ' + e.message);
+                        watchBtn.disabled = true;
+                    }
                 } else {
-                    log('Ad was not completed');
+                    // If script not loaded yet, wait
+                    setTimeout(initAdsgram, 200);
                 }
-            } catch (errorResult) {
-                log('Ad error: ' + (errorResult.description || 'unknown'));
-            } finally {
-                watchAdBtn.disabled = false;
             }
-        });
 
-        window.addEventListener('load', initAdsgram);
+            // Ad button click handler – using the exact pattern from the prompt
+            watchBtn.addEventListener('click', () => {
+                if (!AdController) {
+                    log('⏳ Adsgram not ready yet');
+                    return;
+                }
 
-        // Simple QR generation (just placeholder – use a library in production)
-        document.getElementById('generateBtn').addEventListener('click', () => {
-            const text = document.getElementById('qrInput').value;
-            document.getElementById('qrResult').innerHTML = text ? `QR for: ${text}` : 'Enter text';
-        });
+                // Disable button to prevent multiple clicks
+                watchBtn.disabled = true;
+                log('📢 Showing ad...');
+
+                // Use the provided pattern: AdController.show().then().catch()
+                AdController.show()
+                    .then((result) => {
+                        // result is ShowPromiseResult
+                        log(`Ad finished: done=${result.done}, state=${result.state}, error=${result.error}`);
+                        
+                        // For rewarded format: give reward only if user watched till the end (done true and no error)
+                        if (result.done && !result.error) {
+                            giveRandomBooster();
+                        } else {
+                            log('⚠️ Ad was not completed (closed early or error) – no reward');
+                        }
+                    })
+                    .catch((result) => {
+                        // Error during ad playback
+                        log(`❌ Ad error: ${result.description} (state: ${result.state})`);
+                    })
+                    .finally(() => {
+                        // Re-enable button after ad finishes or errors
+                        watchBtn.disabled = false;
+                    });
+            });
+
+            // Start initialization when page loads
+            window.addEventListener('load', initAdsgram);
+
+            // Initial UI update
+            updateBoosters();
+        })();
     </script>
 </body>
-</html>   
+</html>
 
     
+
 
 
