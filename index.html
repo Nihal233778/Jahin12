@@ -1,12 +1,13 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ad TMA</title>
-    <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        /* same styles as before – keep them */
         body {
             margin: 0;
             padding: 16px;
@@ -102,9 +103,8 @@
 
     <script>
         const tg = window.Telegram.WebApp;
-        tg.expand(); // Make the app use the full height
+        tg.expand();
 
-        // Get user data from Telegram
         const user = tg.initDataUnsafe?.user;
         if (!user) {
             showError('Could not get user data. Please open this app from Telegram.');
@@ -113,14 +113,14 @@
         }
 
         async function fetchAd(user) {
-            // Show loading, hide error and container
             document.getElementById('loading').style.display = 'block';
             document.getElementById('adContainer').style.display = 'none';
             document.getElementById('error').style.display = 'none';
-            document.getElementById('error').innerHTML = ''; // Clear previous error content
+            document.getElementById('error').innerHTML = '';
 
-            const widgetId = '0ed75f78-65f6-41b1-b8f1-fa97c25f048d'; // Your widget ID
-            const url = 'https://bid.tgads.live/bot-request';
+            const widgetId = '0ed75f78-65f6-41b1-b8f1-fa97c25f048d';
+            // ✅ CORRECTED ENDPOINT
+            const url = 'https://bid.tgads.live/bid-request';
 
             const payload = {
                 wid: widgetId,
@@ -157,7 +157,6 @@
 
             const button = document.getElementById('adButton');
             button.innerText = ad.buttonText;
-            // Use Telegram's openLink to keep the user inside the app context
             button.addEventListener('click', (e) => {
                 e.preventDefault();
                 tg.openLink(ad.clickUrl);
@@ -169,10 +168,9 @@
             document.getElementById('adContainer').style.display = 'none';
             const errorDiv = document.getElementById('error');
             errorDiv.style.display = 'block';
-            errorDiv.innerHTML = message; // Set the error text
+            errorDiv.innerHTML = message;
 
             if (showRetry) {
-                // Create and append retry button
                 const retryBtn = document.createElement('button');
                 retryBtn.className = 'retry-button';
                 retryBtn.innerText = 'Retry';
@@ -183,5 +181,7 @@
     </script>
 </body>
 </html>
+                
 
     
+
