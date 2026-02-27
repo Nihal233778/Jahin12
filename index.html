@@ -1,183 +1,228 @@
- <!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ad TMA</title>
+    <title>Booster Box – Rewarded Ads</title>
+    <!-- Telegram WebApp script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- New ad script from richinfo -->
+    <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
+    <script>
+        // Initialize the ad controller
+        window.TelegramAdsController = new TelegramAdsController();
+        window.TelegramAdsController.initialize({
+            pubId: "991787",
+            appId: "6347",
+        });
+        console.log('TelegramAdsController initialized');
+    </script>
     <style>
-        /* (same styles as before) */
         body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             padding: 16px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: var(--tg-theme-bg-color, #ffffff);
             color: var(--tg-theme-text-color, #000000);
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             min-height: 100vh;
-            box-sizing: border-box;
         }
         .container {
             max-width: 400px;
             width: 100%;
-            border-radius: 14px;
-            overflow: hidden;
+        }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 4px;
+            text-align: center;
+        }
+        .subtitle {
+            color: var(--tg-theme-hint-color, #666);
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .booster-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .booster-card {
             background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid var(--tg-theme-hint-color, #ccc);
         }
-        .ad-image {
-            width: 100%;
-            height: auto;
-            display: block;
+        .booster-emoji {
+            font-size: 40px;
+            margin-bottom: 8px;
         }
-        .ad-content {
-            padding: 20px;
+        .booster-name {
+            font-weight: bold;
+            margin-bottom: 4px;
         }
-        .ad-text {
-            font-size: 16px;
-            line-height: 1.4;
-            margin-bottom: 20px;
+        .booster-count {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--tg-theme-button-color, #2481cc);
         }
         .ad-button {
-            display: block;
+            background: var(--tg-theme-button-color, #2481cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: 600;
             width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 10px;
-            background: var(--tg-theme-button-color, #40a7e3);
-            color: var(--tg-theme-button-text-color, #ffffff);
-            font-size: 16px;
-            font-weight: 500;
-            text-align: center;
-            text-decoration: none;
             cursor: pointer;
+            margin: 16px 0;
             transition: opacity 0.2s;
-            box-sizing: border-box;
         }
-        .ad-button:active {
-            opacity: 0.8;
+        .ad-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
-        .error {
-            color: red;
-            text-align: center;
-            padding: 20px;
-        }
-        .retry-button {
+        .log-box {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 12px;
+            border: 1px solid var(--tg-theme-hint-color, #ccc);
             margin-top: 16px;
-            background: var(--tg-theme-button-color, #40a7e3);
-            color: var(--tg-theme-button-text-color, #ffffff);
-            border: none;
-            border-radius: 10px;
-            padding: 12px 24px;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            width: auto;
-            display: inline-block;
-        }
-        .loading {
-            text-align: center;
-            padding: 40px;
-        }
-        #error {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
     </style>
 </head>
 <body>
-    <div class="container" id="adContainer" style="display: none;">
-        <img id="adImage" class="ad-image" src="" alt="Ad">
-        <div class="ad-content">
-            <div id="adText" class="ad-text"></div>
-            <a id="adButton" class="ad-button" href="#" target="_blank" rel="noopener noreferrer">Go!</a>
+    <div class="container">
+        <h1>🎁 Booster Box</h1>
+        <div class="subtitle">Watch ads to get random boosters</div>
+
+        <!-- Boosters inventory -->
+        <div class="booster-grid">
+            <div class="booster-card">
+                <div class="booster-emoji">⬅️</div>
+                <div class="booster-name">Move Back</div>
+                <div class="booster-count" id="booster1">0</div>
+            </div>
+            <div class="booster-card">
+                <div class="booster-emoji">❌</div>
+                <div class="booster-name">Delete Tile</div>
+                <div class="booster-count" id="booster2">0</div>
+            </div>
+            <div class="booster-card">
+                <div class="booster-emoji">➡️</div>
+                <div class="booster-name">Move Without Tile</div>
+                <div class="booster-count" id="booster3">0</div>
+            </div>
+            <div class="booster-card">
+                <div class="booster-emoji">🔄</div>
+                <div class="booster-name">Shuffle</div>
+                <div class="booster-count" id="booster4">0</div>
+            </div>
         </div>
+
+        <!-- Ad button -->
+        <button class="ad-button" id="playAdBtn">🎬 Watch Ad to get 1 random booster</button>
+
+        <!-- Log area -->
+        <div class="log-box" id="log">Ready. Click the button to watch an ad.</div>
     </div>
-    <div id="loading" class="loading">Loading ad...</div>
-    <div id="error" class="error" style="display: none;"></div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-
-        const user = tg.initDataUnsafe?.user;
-        if (!user) {
-            showError('Could not get user data. Please open this app from Telegram.');
-        } else {
-            fetchAd(user);
+        // Telegram WebApp expansion
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
         }
 
-        async function fetchAd(user) {
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('adContainer').style.display = 'none';
-            document.getElementById('error').style.display = 'none';
-            document.getElementById('error').innerHTML = '';
+        // Booster counts: [moveBack, deleteTile, moveWithoutTile, shuffle]
+        let boosters = [0, 0, 0, 0];
 
-            const widgetId = '0ed75f78-65f6-41b1-b8f1-fa97c25f048d';
-            // 👇 USE YOUR PYTHON PROXY URL
-            const url = 'https://your-proxy-url.com/api/ad';
+        // DOM elements
+        const logEl = document.getElementById('log');
+        const playBtn = document.getElementById('playAdBtn');
+        const boosterEls = [
+            document.getElementById('booster1'),
+            document.getElementById('booster2'),
+            document.getElementById('booster3'),
+            document.getElementById('booster4')
+        ];
 
-            const payload = {
-                wid: widgetId,
-                language: user.language_code || 'en',
-                isPremium: user.is_premium || false,
-                firstName: user.first_name || 'User',
-                telegramId: user.id.toString()
-            };
-
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error ${response.status}`);
-                }
-
-                const adData = await response.json();
-                renderAd(adData);
-            } catch (err) {
-                showError('Failed to load ad: ' + err.message, true);
-            }
-        }
-
-        function renderAd(ad) {
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('adContainer').style.display = 'block';
-
-            document.getElementById('adImage').src = ad.image;
-            document.getElementById('adText').innerText = ad.text;
-
-            const button = document.getElementById('adButton');
-            button.innerText = ad.buttonText;
-            button.addEventListener('click', (e) => {
-                e.preventDefault();
-                tg.openLink(ad.clickUrl);
+        // Update booster counts in UI
+        function updateBoosters() {
+            boosterEls.forEach((el, i) => {
+                el.textContent = boosters[i];
             });
         }
 
-        function showError(message, showRetry = false) {
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('adContainer').style.display = 'none';
-            const errorDiv = document.getElementById('error');
-            errorDiv.style.display = 'block';
-            errorDiv.innerHTML = message;
+        // Log helper
+        function log(message) {
+            logEl.textContent = message;
+            console.log(message);
+        }
 
-            if (showRetry) {
-                const retryBtn = document.createElement('button');
-                retryBtn.className = 'retry-button';
-                retryBtn.innerText = 'Retry';
-                retryBtn.onclick = () => fetchAd(user);
-                errorDiv.appendChild(retryBtn);
+        // Give a random booster
+        function giveRandomBooster() {
+            const randomIndex = Math.floor(Math.random() * boosters.length);
+            boosters[randomIndex]++;
+            updateBoosters();
+            const names = ['Move Back', 'Delete Tile', 'Move Without Tile', 'Shuffle'];
+            log(`🎉 You got: ${names[randomIndex]}!`);
+        }
+
+        // Function to attempt showing an ad using the new controller
+        async function showAd() {
+            const controller = window.TelegramAdsController;
+            if (!controller) {
+                log('❌ Ad controller not available');
+                return;
+            }
+
+            // Disable button during ad
+            playBtn.disabled = true;
+            log('📢 Loading ad...');
+
+            try {
+                // Try to find a suitable method for rewarded video
+                let result;
+                if (typeof controller.showRewardedVideo === 'function') {
+                    result = await controller.showRewardedVideo();
+                } else if (typeof controller.showRewarded === 'function') {
+                    result = await controller.showRewarded();
+                } else if (typeof controller.showAd === 'function') {
+                    result = await controller.showAd();
+                } else {
+                    // List available methods for debugging
+                    const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(controller))
+                                        .filter(name => typeof controller[name] === 'function');
+                    log('❌ No suitable ad method. Available: ' + methods.join(', '));
+                    playBtn.disabled = false;
+                    return;
+                }
+
+                // If we reach here, ad played successfully (assuming method resolves on success)
+                log('✅ Ad completed! You earned a booster.');
+                giveRandomBooster();
+            } catch (error) {
+                log('❌ Ad error: ' + (error.message || 'unknown'));
+            } finally {
+                playBtn.disabled = false;
             }
         }
+
+        // Attach event listener
+        playBtn.addEventListener('click', showAd);
+
+        // Initial UI update
+        updateBoosters();
     </script>
 </body>
-</html>
-        
+</html>                 
